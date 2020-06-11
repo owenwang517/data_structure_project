@@ -95,7 +95,7 @@ int main()
 	CStack stack(50);						//存放括号，用于检验括号是否匹配 
 	char ch0;
 	int sign[50]={0};
-	int k=0;
+	int k=0,flag=1;
 	for(int i=0;i<s;i++)							//检验表达式是否有误(括号是否匹配) 
 		{
 			if(ch[i]=='{'||ch[i]=='['||ch[i]=='(')	//若是左括号，存入stack 
@@ -131,7 +131,7 @@ int main()
 	if(!stack.empty())								//只有左括号的情况 
 		f=0;
 	if(f==0)										//若f=0，表达式有误 
-		cout <<"表达式不正确" <<endl;
+		cout <<"括号不匹配" <<endl;
 	else if(f==1)									//若f=1，进行中缀转后缀以及计算 
 	{
 		CStack stack1(20);						//栈1，用于临时存放优先级较低的运算符 
@@ -164,6 +164,31 @@ int main()
 				}
 				i--;							//由于跳出循环时,ch[i]为最后一位数字后面的未处理的运算符,与for循环的i++重复,所以i-- 
 				stack2.push(num);				//将计算所得的整形数字存入stack2中 
+				sign[k++]=1;
+			}
+			else if(ch[i]=='-'&&i==0||ch[i]=='-'&&ch[i-1]=='('){
+				i++;
+				num=0;
+				n=1;
+				do								//从此数字开始向后检索，直到最近的一个非数字元素为止, 
+				{								//将该非数字元素之前的数字通过计算化为数字的整数部分 
+					num=num*10+(ch[i]-'0');
+					i++;
+				}
+				while(isdigit(ch[i]));
+				if(ch[i]=='.')					//若该非数字元素为小数点 
+				{
+					i++;
+					do							//从小数点后面的数字开始向后检索,直到最近的一个运算符为止, 
+					{							//将该运算符之前的数字通过计算化为数字的小数部分,并与之前的整数部分相加 
+						num=num+((float)(ch[i]-'0')/(float)(pow(10,n)));
+						n++;
+						i++;
+					}
+					while(isdigit(ch[i]));
+				}
+				i--;
+				stack2.push(-num);
 				sign[k++]=1;
 			}
 			else if(ch[i]=='+'||ch[i]=='-'||ch[i]=='*'||ch[i]=='/'||ch[i]=='^'||ch[i]=='%')	//若为运算符 
@@ -230,14 +255,18 @@ int main()
 				second=stack3.gettop();										//取出stack3的top元素作为被运算数second  
 				stack3.pop();												//调用pop函数，top指针前移  
 				first=stack3.gettop();										//再取top元素作为运算数first 
-				stack3.pop();												//调用pop函数，top指针前移 
+				flag=stack3.pop();												//调用pop函数，top指针前移 
+				if(flag==0){
+					cout<<"符号错误";
+					return 0;
+				}
 				if(element[i]=='+')											//根据运算符进行相应运算 
 				{
 					stack3.push(first+second);
 				}
 				if(element[i]=='-')
 				{
-					stack3.push(first-second);
+					stack3.push(first-second); 
 				}
 				if(element[i]=='*')
 				{
@@ -245,6 +274,10 @@ int main()
 				}
 				if(element[i]=='/')
 				{
+					if(second==0){
+						cout<<"分母不能为零"<<endl;
+						return 0;
+					}
 					stack3.push(first/second);
 				}
 				if(element[i]=='^')
